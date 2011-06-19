@@ -38,21 +38,6 @@ module Mongoid #:nodoc:
             Proxy.new(metadata, value)
           end
 
-          # Deserialize the field.
-          #
-          # @example Deserialize the array.
-          #   field.deserialize(object)
-          #
-          # @param [ Object ] object The object to deserialize.
-          # @param [ Document ] document The caller.
-          #
-          # @return [ Proxy::Array ] The proxied array.
-          #
-          # @since 2.1.0
-          def deserialize(object, document = nil)
-            object
-          end
-
           protected
 
           # Get the constraint from the metadata once.
@@ -83,7 +68,7 @@ module Mongoid #:nodoc:
             # @since 2.1.0
             def initialize(metadata, object)
               @metadata = metadata
-              super(::Array.wrap(object))
+              super(object)
             end
           end
         end

@@ -811,7 +811,7 @@ describe Mongoid::Relations::Referenced::ManyToMany do
       context "when the documents are part of the relation" do
 
         before do
-          Preference.create(:person_ids => person.id)
+          Preference.create(:person_ids => [ person.id ])
         end
 
         it "returns the count from the db" do
