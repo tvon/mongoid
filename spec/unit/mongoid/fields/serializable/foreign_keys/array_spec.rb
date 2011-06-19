@@ -26,27 +26,89 @@ describe Mongoid::Fields::Serializable::ForeignKeys::Array do
     end
   end
 
+  describe "#deserialize" do
+
+    let(:metadata) do
+      Mongoid::Relations::Metadata.new(
+        :inverse_class_name => "Game",
+        :name => :person,
+        :relation => Mongoid::Relations::Referenced::In
+      )
+    end
+
+    let(:field) do
+      described_class.new(
+        :vals,
+        :type => Array,
+        :default => [],
+        :identity => true,
+        :metadata => metadata
+      )
+    end
+
+    let(:object_id) do
+      BSON::ObjectId.new
+    end
+
+    it "returns the array uncasted" do
+      field.deserialize([ object_id ]).should == [ object_id ]
+    end
+  end
+
   describe "#serialize" do
 
-    context "when the array is object ids" do
+    let(:metadata) do
+      Mongoid::Relations::Metadata.new(
+        :inverse_class_name => "Game",
+        :name => :person,
+        :relation => Mongoid::Relations::Referenced::In
+      )
+    end
 
-      let(:metadata) do
-        Mongoid::Relations::Metadata.new(
-          :inverse_class_name => "Game",
-          :name => :person,
-          :relation => Mongoid::Relations::Referenced::In
-        )
+    let(:field) do
+      described_class.new(
+        :vals,
+        :type => Array,
+        :default => [],
+        :identity => true,
+        :metadata => metadata
+      )
+    end
+
+    context "when passed a single object id" do
+
+      context "when using object ids" do
+
+        let(:object_id) do
+          BSON::ObjectId.new
+        end
+
+        it "performs conversion on the ids if strings" do
+          field.serialize(object_id.to_s).should == [object_id]
+        end
       end
 
-      let(:field) do
-        described_class.new(
-          :vals,
-          :type => Array,
-          :default => [],
-          :identity => true,
-          :metadata => metadata
-        )
+      context "when not using object ids" do
+
+        let(:object_id) do
+          BSON::ObjectId.new
+        end
+
+        before do
+          Person.identity :type => String
+        end
+
+        after do
+          Person.identity :type => BSON::ObjectId
+        end
+
+        it "does not convert" do
+          field.serialize(object_id.to_s).should == [object_id.to_s]
+        end
       end
+    end
+
+    context "when passed object ids" do
 
       context "when using object ids" do
 

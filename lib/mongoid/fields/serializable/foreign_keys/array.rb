@@ -18,7 +18,6 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def default
-            # default should return the proxied array.
             Proxy.new(metadata, default_value.dup)
           end
 
@@ -35,8 +34,8 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def serialize(object, document = nil)
-            # Wrap the object in the proxied array.
-            object.blank? ? [] : constraint.convert(object)
+            value = object.blank? ? [] : constraint.convert(object)
+            Proxy.new(metadata, value)
           end
 
           # Deserialize the field.
@@ -51,7 +50,6 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def deserialize(object, document = nil)
-            # deserialize should be implemented to return the proxied array.
             object
           end
 
@@ -80,12 +78,12 @@ module Mongoid #:nodoc:
             #   Array::Proxy.new(metadata)
             #
             # @param [ Metadata ] metadata The relation metadata.
-            # @param [ Array ] array The array to wrap.
+            # @param [ Object ] object The object or array to wrap.
             #
             # @since 2.1.0
-            def initialize(metadata, array)
+            def initialize(metadata, object)
               @metadata = metadata
-              super(array)
+              super(::Array.wrap(object))
             end
           end
         end
