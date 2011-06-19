@@ -226,7 +226,7 @@ module Mongoid #:nodoc
         generated_field_methods.module_eval do
           if field.cast_on_read?
             define_method(meth) do
-              field.deserialize(read_attribute(name))
+              field.deserialize(read_attribute(name), self)
             end
           else
             define_method(meth) do

@@ -14,11 +14,12 @@ module Mongoid #:nodoc:
         #   field.deserialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Range ] The converted range.
         #
         # @since 2.1.0
-        def deserialize(object)
+        def deserialize(object, document = nil)
           object.nil? ? nil : ::Range.new(object["min"], object["max"])
         end
 
@@ -29,11 +30,12 @@ module Mongoid #:nodoc:
         #   field.serialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Hash ] The converted hash.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           object.nil? ? nil : { "min" => object.min, "max" => object.max }
         end
       end

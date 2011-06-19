@@ -24,11 +24,12 @@ module Mongoid #:nodoc:
         #   field.deserialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Time ] The converted time.
         #
         # @since 2.1.0
-        def deserialize(object)
+        def deserialize(object, document = nil)
           return nil if object.blank?
           object = object.getlocal unless Mongoid::Config.use_utc?
           if Mongoid::Config.use_activesupport_time_zone?

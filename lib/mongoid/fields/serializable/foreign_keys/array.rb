@@ -18,7 +18,8 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def default
-            default_value.dup
+            # default should return the proxied array.
+            Proxy.new(metadata, default_value.dup)
           end
 
           # Serialize the object from the type defined in the model to a MongoDB
@@ -28,12 +29,30 @@ module Mongoid #:nodoc:
           #   field.serialize(object)
           #
           # @param [ Object ] object The object to cast.
+          # @param [ Document ] document The document that made the method call.
           #
-          # @return [ Array ] The converted object.
+          # @return [ Proxy::Array ] The proxied array.
           #
           # @since 2.1.0
-          def serialize(object)
+          def serialize(object, document = nil)
+            # Wrap the object in the proxied array.
             object.blank? ? [] : constraint.convert(object)
+          end
+
+          # Deserialize the field.
+          #
+          # @example Deserialize the array.
+          #   field.deserialize(object)
+          #
+          # @param [ Object ] object The object to deserialize.
+          # @param [ Document ] document The caller.
+          #
+          # @return [ Proxy::Array ] The proxied array.
+          #
+          # @since 2.1.0
+          def deserialize(object, document = nil)
+            # deserialize should be implemented to return the proxied array.
+            object
           end
 
           protected
@@ -47,7 +66,27 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def constraint
-            @constraint ||= options[:metadata].constraint
+            @constraint ||= metadata.constraint
+          end
+
+          # The proxy class wraps the foreign key array and performs the
+          # necessary inverse operations when the array is appended to or an
+          # item is deleted.
+          class Proxy < ::Array
+
+            # Instantiate a new proxy.
+            #
+            # @example Create the new proxy.
+            #   Array::Proxy.new(metadata)
+            #
+            # @param [ Metadata ] metadata The relation metadata.
+            # @param [ Array ] array The array to wrap.
+            #
+            # @since 2.1.0
+            def initialize(metadata, array)
+              @metadata = metadata
+              super(array)
+            end
           end
         end
       end

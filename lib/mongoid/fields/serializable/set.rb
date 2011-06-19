@@ -14,11 +14,12 @@ module Mongoid #:nodoc:
         #   field.deserialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Set ] The converted set.
         #
         # @since 2.1.0
-        def deserialize(object)
+        def deserialize(object, document = nil)
           ::Set.new(object)
         end
 
@@ -29,11 +30,12 @@ module Mongoid #:nodoc:
         #   field.serialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Array ] The converted array.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           object.to_a
         end
       end

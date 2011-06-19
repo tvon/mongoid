@@ -14,18 +14,18 @@ module Mongoid #:nodoc:
     #   class MyCustomType
     #     include Mongoid::Fields::Serializable
     #
-    #     def deserialize(object)
+    #     def deserialize(object, document = nil)
     #       # Do something to convert it from Mongo to my type.
     #     end
     #
-    #     def serialize(object)
+    #     def serialize(object, document = nil)
     #       # Do something to convert from my type to MongoDB friendly.
     #     end
     #   end
     module Serializable
 
       # Set readers for the instance variables.
-      attr_reader :default_value, :label, :name, :options
+      attr_reader :default_value, :label, :metadata, :name, :options
 
       # When reading the field do we need to cast the value? This holds true when
       # times are stored or for big decimals which are stored as strings.
@@ -67,11 +67,12 @@ module Mongoid #:nodoc:
       #   field.deserialize(object)
       #
       # @param [ Object ] object The object to cast.
+      # @param [ Document ] document The document that made the method call.
       #
       # @return [ Object ] The converted object.
       #
       # @since 2.1.0
-      def deserialize(object); object; end
+      def deserialize(object, document = nil); object; end
 
       # Create the new field with a name and optional additional options.
       #
@@ -87,7 +88,8 @@ module Mongoid #:nodoc:
       # @since 2.1.0
       def initialize(name, options = {})
         @name, @options = name, options
-        @default_value, @label = options[:default], options[:label]
+        @default_value, @label, @metadata =
+          options[:default], options[:label], options[:metadata]
       end
 
       # Serialize the object from the type defined in the model to a MongoDB
@@ -97,11 +99,12 @@ module Mongoid #:nodoc:
       #   field.serialize(object)
       #
       # @param [ Object ] object The object to cast.
+      # @param [ Document ] document The document that made the method call.
       #
       # @return [ Object ] The converted object.
       #
       # @since 2.1.0
-      def serialize(object); object; end
+      def serialize(object, document = nil); object; end
 
       # Get the type of this field - inferred from the class name.
       #

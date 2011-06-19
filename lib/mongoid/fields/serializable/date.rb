@@ -15,11 +15,12 @@ module Mongoid #:nodoc:
         #   field.deserialize(object)
         #
         # @param [ Object ] object The object to cast.
+        # @param [ Document ] document The document that made the method call.
         #
         # @return [ Date ] The converted date.
         #
         # @since 2.1.0
-        def deserialize(object)
+        def deserialize(object, document = nil)
          return nil if object.blank?
           if Mongoid::Config.use_utc?
             object.to_date
