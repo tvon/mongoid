@@ -37,10 +37,11 @@ module Mongoid #:nodoc:
           # @since 2.1.0
           def serialize(object, document = nil)
             value = object.blank? ? [] : constraint.convert(object)
+            substitute(document, value)
             Proxy.new(document, metadata, name, value)
           end
 
-          protected
+          private
 
           # Get the constraint from the metadata once.
           #
@@ -52,6 +53,39 @@ module Mongoid #:nodoc:
           # @since 2.1.0
           def constraint
             @constraint ||= metadata.constraint
+          end
+
+          # Substitute the foreign key values for the many-to-many. This will
+          # persist atomically both sides of the relation.
+          #
+          # @example Replace the keys.
+          #   person.preference_ids = [ id_one, id_two ]
+          #
+          # @note This will orphan any existing values on the inverse side of
+          #   the relation if they are replaced.
+          #
+          # @param [ Document ] document The base document.
+          # @param [ Array ] value The replacement keys.
+          #
+          # @since 2.1.0
+          def substitute(document, value)
+            if document && document.persisted?
+              # Update each of the inverse documents with the foreign key of
+              # the base document.
+              metadata.klass.collection.update(
+                { :_id => { "$in" => value } },
+                { "$addToSet" => { metadata.inverse_foreign_key => document.id } },
+                :multi => true
+              )
+              # Update the base document and replace it's foreign key values
+              # with the value provided.
+              metadata.inverse_klass.collection.update(
+                { :_id => document.id },
+                { "$set" => { metadata.foreign_key => value } }
+              )
+              # Reset the dirty flag on the foreign key.
+              document.reset_attribute!(name)
+            end
           end
 
           # The proxy class wraps the foreign key array and performs the
