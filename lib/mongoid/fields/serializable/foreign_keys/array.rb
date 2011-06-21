@@ -20,7 +20,7 @@ module Mongoid #:nodoc:
           #
           # @since 2.1.0
           def default(document = nil)
-            Proxy.new(document, metadata, default_value.dup)
+            Proxy.new(document, metadata, name, default_value.dup)
           end
 
           # Serialize the object from the type defined in the model to a MongoDB
@@ -37,7 +37,7 @@ module Mongoid #:nodoc:
           # @since 2.1.0
           def serialize(object, document = nil)
             value = object.blank? ? [] : constraint.convert(object)
-            Proxy.new(document, metadata, value)
+            Proxy.new(document, metadata, name, value)
           end
 
           protected
@@ -59,12 +59,20 @@ module Mongoid #:nodoc:
           # item is deleted.
           class Proxy < ::Array
 
-            attr_reader :base, :metadata
+            attr_reader :base, :metadata, :name
 
             # When appending an object to this array, we need to append the
             # base key to the inverse side. We do this my performing an atomic
             # $addToSet on the document on the other side with the provided key
             # and the base document.
+            #
+            # @todo Durran: I don't like any of this code, probably because I
+            #  don't like many-to-many relationships in object mappers. But
+            #  this is the best I could think of right now.
+            #
+            # @note This will perform 2 atomic database calls to update the
+            #   foreign keys on either side in order to keep the database in a
+            #   consistent state.
             #
             # @example Add to the array.
             #   proxy << object_id
@@ -73,13 +81,70 @@ module Mongoid #:nodoc:
             #
             # @since 2.1.0
             def <<(object)
-              metadata.klass.collection.update(
-                { :_id => object },
-                { "$addToSet" => { metadata.inverse_foreign_key => base.id } }
-              )
+              if base.persisted?
+                # Perform the atomic $addToSet for the inverse.
+                execute(
+                  "$addToSet",
+                  metadata.klass.collection,
+                  object,
+                  metadata.inverse_foreign_key,
+                  base.id
+                )
+                # Perform the atomic $addToSet for the base. This must persist
+                # as well to keep the database in a consistent state.
+                execute(
+                  "$addToSet",
+                  metadata.inverse_klass.collection,
+                  base.id,
+                  metadata.foreign_key,
+                  object
+                )
+                # We remove the dirty foreign key now since it was
+                # persisted.
+                base.reset_attribute!(name)
+              end
               super(object)
             end
             alias :push :<<
+
+            # When deleting a key from this special array we need to remove the
+            # base key from the inverse side in the database as well.
+            #
+            # @note This will perform 2 atomic database calls to update the
+            #   foreign keys on either side in order to keep the database in a
+            #   consistent state.
+            #
+            # @example Delete from the array.
+            #   proxy.delete(object_id)
+            #
+            # @param [ Object ] object The id of the document getting deleted.
+            #
+            # @since 2.1.0
+            def delete(object)
+              if base.persisted?
+                # Perform the atomic $pull for the inverse.
+                execute(
+                  "$pull",
+                  metadata.klass.collection,
+                  object,
+                  metadata.inverse_foreign_key,
+                  base.id
+                )
+                # Perform the atomic $pull for the base. This must persist
+                # as well to keep the database in a consistent state.
+                execute(
+                  "$pull",
+                  metadata.inverse_klass.collection,
+                  base.id,
+                  metadata.foreign_key,
+                  object
+                )
+                # We remove the dirty foreign key now since it was
+                # persisted.
+                base.reset_attribute!(name)
+              end
+              super(object)
+            end
 
             # Instantiate a new proxy.
             #
@@ -90,9 +155,27 @@ module Mongoid #:nodoc:
             # @param [ Object ] object The object or array to wrap.
             #
             # @since 2.1.0
-            def initialize(base, metadata, object)
-              @base, @metadata = base, metadata
+            def initialize(base, metadata, name, object)
+              @base, @metadata, @name = base, metadata, name
               super(object)
+            end
+
+            private
+
+            # Perform an atomic execution.
+            #
+            # @example Execute the atomic operation.
+            #   array.execute("$pull", collection, id, "person_ids", inverse.id)
+            #
+            # @param [ String ] operation The atomic operation to perform.
+            # @param [ Collection ] collection The document collection.
+            # @param [ Object ] id The id of the document to update.
+            # @param [ String ] key The name of the foreign key field.
+            # @param [ Object ] inverse_id The id of the inverse document.
+            #
+            # @since 2.1.0
+            def execute(operation, collection, id, key, inverse_id)
+              collection.update({ :_id => id }, { operation => { key => inverse_id }})
             end
           end
         end

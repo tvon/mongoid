@@ -84,7 +84,9 @@ module Mongoid # :nodoc:
           #
           # @since 2.0.0.rc.1
           def unbind_one(doc, options = {})
-            base.do_or_do_not(metadata.foreign_key).delete(doc.id)
+            base.do_or_do_not(metadata.foreign_key).delete_if do |key|
+              key == doc.id
+            end
             if options[:continue]
               inverse = metadata.inverse(target)
               if inverse
