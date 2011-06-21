@@ -24,7 +24,9 @@ Dir[ File.join(SUPPORT, "*.rb") ].each { |file| require File.basename(file) }
 RSpec.configure do |config|
   config.mock_with(:mocha)
 
-  config.after(:suite) { Mongoid.purge! }
+  config.after(:suite) do
+    Mongoid.purge!
+  end
 
   # We filter out the specs that require authentication if the database has not
   # had the mongoid user set up properly.

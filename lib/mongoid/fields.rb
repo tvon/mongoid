@@ -84,11 +84,14 @@ module Mongoid #:nodoc
       # @example Get the defaults.
       #   Person.defaults
       #
+      # @param [ Document ] document The base document.
+      #
       # @return [ Hash ] The field defaults.
-      def defaults
+      def defaults(document)
         fields.inject({}) do |defs, (field_name,field)|
-          next(defs) if field.default.nil?
-          defs[field_name.to_s] = field.default
+          default = field.default(document)
+          next(defs) if default.nil?
+          defs[field_name.to_s] = default
           defs
         end
       end

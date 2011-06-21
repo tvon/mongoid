@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
         # @return [ String ] The converted string.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           object.try(:to_s)
         end
         alias :set :serialize

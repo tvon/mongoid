@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
         # @return [ Symbol ] The converted symbol.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           object.blank? ? nil : object.to_sym
         end
         alias :set :serialize

@@ -33,7 +33,7 @@ module Mongoid #:nodoc:
         # @return [ true, false ] The converted boolean.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           object = MAPPINGS[object]
           object.nil? ? nil : object
         end

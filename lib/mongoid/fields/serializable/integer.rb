@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
         # @return [ Integer ] The converted integer.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           return nil if object.blank?
           begin
             object.to_s =~ /\./ ? Float(object) : Integer(object)

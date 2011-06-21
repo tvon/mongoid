@@ -5,7 +5,7 @@ describe Mongoid::Fields do
   describe ".defaults" do
 
     it "returns a hash of all the default values" do
-      Game.defaults.should == { "high_score" => 500, "score" => 0 }
+      Game.defaults(nil).should == { "high_score" => 500, "score" => 0 }
     end
   end
 
@@ -61,7 +61,7 @@ describe Mongoid::Fields do
       end
 
       it "does not return subclass defaults" do
-        shape.defaults.should == { "x" => 0, "y" => 0 }
+        shape.defaults(nil).should == { "x" => 0, "y" => 0 }
       end
     end
 
@@ -72,7 +72,7 @@ describe Mongoid::Fields do
       end
 
       it "has the parent and child defaults" do
-        circle.defaults.should == { "x" => 0, "y" => 0, "radius" => 0 }
+        circle.defaults(nil).should == { "x" => 0, "y" => 0, "radius" => 0 }
       end
     end
   end

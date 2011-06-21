@@ -50,7 +50,7 @@ module Mongoid #:nodoc:
         # @return [ Time ] The converted UTC time.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           return nil if object.blank?
           time = convert_to_time(object)
           strip_milliseconds(time).utc

@@ -18,11 +18,11 @@ describe Mongoid::Fields::Serializable::ForeignKeys::Array do
     end
 
     it "dups the default value" do
-      field.default.should_not equal(default)
+      field.default(nil).should_not equal(default)
     end
 
     it "returns the correct value" do
-      field.default.should == default
+      field.default(nil).should == default
     end
   end
 

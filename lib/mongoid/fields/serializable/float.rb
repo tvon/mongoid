@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
         # @return [ Float ] The converted float.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           return nil if object.blank?
           begin
             Float(object)

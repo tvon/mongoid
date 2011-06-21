@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
         # @return [ BSON::ObjectId ] The converted object id.
         #
         # @since 2.1.0
-        def serialize(object)
+        def serialize(object, document = nil)
           if object.is_a?(::String)
             BSON::ObjectId.from_string(object) unless object.blank?
           else

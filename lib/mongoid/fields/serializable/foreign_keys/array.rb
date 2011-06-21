@@ -14,11 +14,13 @@ module Mongoid #:nodoc:
           # @example Get the default.
           #   field.default
           #
+          # @param [ Document ] document The base document.
+          #
           # @return [ Object ] The default value cloned.
           #
           # @since 2.1.0
-          def default
-            Proxy.new(metadata, default_value.dup)
+          def default(document = nil)
+            Proxy.new(document, metadata, default_value.dup)
           end
 
           # Serialize the object from the type defined in the model to a MongoDB
@@ -35,7 +37,7 @@ module Mongoid #:nodoc:
           # @since 2.1.0
           def serialize(object, document = nil)
             value = object.blank? ? [] : constraint.convert(object)
-            Proxy.new(metadata, value)
+            Proxy.new(document, metadata, value)
           end
 
           protected
@@ -57,6 +59,28 @@ module Mongoid #:nodoc:
           # item is deleted.
           class Proxy < ::Array
 
+            attr_reader :base, :metadata
+
+            # When appending an object to this array, we need to append the
+            # base key to the inverse side. We do this my performing an atomic
+            # $addToSet on the document on the other side with the provided key
+            # and the base document.
+            #
+            # @example Add to the array.
+            #   proxy << object_id
+            #
+            # @param [ Object ] object The id of the document getting added.
+            #
+            # @since 2.1.0
+            def <<(object)
+              metadata.klass.collection.update(
+                { :_id => object },
+                { "$addToSet" => { metadata.inverse_foreign_key => base.id } }
+              )
+              super(object)
+            end
+            alias :push :<<
+
             # Instantiate a new proxy.
             #
             # @example Create the new proxy.
@@ -66,8 +90,8 @@ module Mongoid #:nodoc:
             # @param [ Object ] object The object or array to wrap.
             #
             # @since 2.1.0
-            def initialize(metadata, object)
-              @metadata = metadata
+            def initialize(base, metadata, object)
+              @base, @metadata = base, metadata
               super(object)
             end
           end

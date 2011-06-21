@@ -52,7 +52,7 @@ module Mongoid #:nodoc:
       # @return [ Object ] The default value.
       #
       # @since 2.1.0
-      def default
+      def default(document = nil)
         if default_value.respond_to?(:call)
           serialize(default_value.call)
         else

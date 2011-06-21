@@ -19,7 +19,7 @@ module Mongoid #:nodoc:
           # @return [ Array ] The converted object.
           #
           # @since 2.1.0
-          def serialize(object)
+          def serialize(object, document = nil)
             object.blank? ? nil : constraint.convert(object)
           end
 
