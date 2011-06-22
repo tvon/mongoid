@@ -21,6 +21,7 @@ require "mongoid/fields/serializable/time"
 require "mongoid/fields/serializable/time_with_zone"
 require "mongoid/fields/serializable/foreign_keys/array"
 require "mongoid/fields/serializable/foreign_keys/object"
+require "mongoid/fields/serializable/foreign_keys/proxy"
 
 module Mongoid #:nodoc
 
