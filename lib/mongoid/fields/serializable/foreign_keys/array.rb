@@ -23,6 +23,23 @@ module Mongoid #:nodoc:
             Proxy.new(document, metadata, name, default_value.dup)
           end
 
+          # Read this object from the attributes hash, and convert it to a
+          # proxy if necessary.
+          #
+          # @example Deserialize the field.
+          #   field.deserialize([], model)
+          #
+          # @param [ Object ] object The object to cast.
+          # @param [ Document ] document The document making the method call.
+          #
+          # @return [ Proxy ] The proxied array.
+          #
+          # @since 2.1.0
+          def deserialize(object, document = nil)
+            return object if object.is_a?(Proxy)
+            Proxy.new(document, metadata, name, object)
+          end
+
           # Serialize the object from the type defined in the model to a MongoDB
           # compatible object to store.
           #
@@ -32,7 +49,7 @@ module Mongoid #:nodoc:
           # @param [ Object ] object The object to cast.
           # @param [ Document ] document The document that made the method call.
           #
-          # @return [ Proxy::Array ] The proxied array.
+          # @return [ Proxy ] The proxied array.
           #
           # @since 2.1.0
           def serialize(object, document = nil)

@@ -104,28 +104,64 @@ describe Mongoid::Fields::Serializable::ForeignKeys::Array do
 
       context "when the targets are persisted" do
 
-        let(:preference_one) do
-          Preference.create(:name => "test3")
+        context "when creating and setting" do
+
+          let(:preference_one) do
+            Preference.create(:name => "test3")
+          end
+
+          let(:preference_two) do
+            Preference.create(:name => "test4")
+          end
+
+          before do
+            person.preference_ids = [ preference_one.id, preference_two.id ]
+          end
+
+          it "adds the id to the base keys" do
+            person.reload.preference_ids.should == [ preference_one.id, preference_two.id ]
+          end
+
+          it "sets the base key on the first inverse" do
+            preference_one.reload.person_ids.should == [ person.id ]
+          end
+
+          it "sets the base key on the second inverse" do
+            preference_two.reload.person_ids.should == [ person.id ]
+          end
         end
 
-        let(:preference_two) do
-          Preference.create(:name => "test4")
-        end
+        context "when loaded from the database" do
 
-        before do
-          person.preference_ids = [ preference_one.id, preference_two.id ]
-        end
+          let(:preference_one) do
+            Preference.where(:name => "test1").first
+          end
 
-        it "adds the id to the base keys" do
-          person.reload.preference_ids.should == [ preference_one.id, preference_two.id ]
-        end
+          let(:preference_two) do
+            Preference.where(:name => "test2").first
+          end
 
-        it "sets the base key on the first inverse" do
-          preference_one.reload.person_ids.should == [ person.id ]
-        end
+          let(:from_db) do
+            Person.find(person.id)
+          end
 
-        it "sets the base key on the second inverse" do
-          preference_two.reload.person_ids.should == [ person.id ]
+          before do
+            Preference.create(:name => "test1")
+            Preference.create(:name => "test2")
+            from_db.preference_ids = [ preference_one.id, preference_two.id ]
+          end
+
+          it "adds the id to the base keys" do
+            from_db.preference_ids.should == [ preference_one.id, preference_two.id ]
+          end
+
+          it "does not set the base key on the first inverse" do
+            preference_one.reload.person_ids.should == [ person.id ]
+          end
+
+          it "does not set the base key on the second inverse" do
+            preference_two.reload.person_ids.should == [ person.id ]
+          end
         end
       end
     end
@@ -183,24 +219,55 @@ describe Mongoid::Fields::Serializable::ForeignKeys::Array do
 
       context "when the target is persisted" do
 
-        let(:preference) do
-          Preference.create(:name => "testing")
+        context "when creating and setting" do
+
+          let(:preference) do
+            Preference.create(:name => "testing")
+          end
+
+          before do
+            person.preference_ids << preference.id
+          end
+
+          it "adds the id to the reloaded base keys" do
+            person.reload.preference_ids.should == [ preference.id ]
+          end
+
+          it "removes the key from the dirty attributes" do
+            person.changes["preference_ids"].should be_nil
+          end
+
+          it "sets the base key on the reloaded inverse" do
+            preference.reload.person_ids.should == [ person.id ]
+          end
         end
 
-        before do
-          person.preference_ids << preference.id
-        end
+        context "when loading from the database" do
 
-        it "adds the id to the reloaded base keys" do
-          person.reload.preference_ids.should == [ preference.id ]
-        end
+          let(:preference) do
+            Preference.where(:name => "testing").first
+          end
 
-        it "removes the key from the dirty attributes" do
-          person.changes["preference_ids"].should be_nil
-        end
+          let(:from_db) do
+            Person.find(person.id)
+          end
 
-        it "sets the base key on the reloaded inverse" do
-          preference.reload.person_ids.should == [ person.id ]
+          before do
+            Preference.create(:name => "testing")
+            from_db.preference_ids << preference.id
+          end
+
+          it "adds the id to the reloaded base keys" do
+            from_db.reload.preference_ids.should == [ preference.id ]
+          end
+
+          it "removes the key from the dirty attributes" do
+            from_db.changes["preference_ids"].should be_nil
+          end
+
+          it "sets the base key on the reloaded inverse" do
+            preference.reload.person_ids.should == [ person.id ]
+          end
         end
       end
     end
