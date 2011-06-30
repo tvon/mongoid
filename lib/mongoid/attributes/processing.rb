@@ -19,8 +19,11 @@ module Mongoid #:nodoc:
       # @since 2.0.0.rc.7
       def process(attrs = nil, guard_protected_attributes = true)
         attrs ||= {}
-        attrs = sanitize_for_mass_assignment(attrs) if guard_protected_attributes
-        attrs.each_pair do |key, value|
+        safe_attrs = sanitize_for_mass_assignment(attrs) if guard_protected_attributes
+        unless attrs.keys.sort == safe_attrs.keys.sort
+          raise "attempting update_attributes on protected attributes: #{(attrs.keys - safe_attrs.keys).join(', ')}"
+        end
+        safe_attrs.each_pair do |key, value|
           next if pending_attribute?(key, value)
           process_attribute(key, value)
         end
